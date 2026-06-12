@@ -56,7 +56,6 @@ spec:
       smarthost: smtp.gmail.com:587
       authUsername: alertmanager@gmail.com   # ← email gửi
       authPassword:
-        secret:
-          name: smtp-secret
-          key: password
+        name: smtp-secret
+        key: password
       requireTLS: true
