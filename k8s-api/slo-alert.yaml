@@ -1,0 +1,62 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+
+metadata:
+  name: api-slo
+  namespace: demo
+  labels:
+    # label này để Prometheus operator pickup rule
+    release: kube-prometheus-stack
+
+spec:
+  groups:
+  - name: api.slo
+    interval: 30s
+    rules:
+
+    # SLO: tỉ lệ request thành công >= 95% trong 5 phút
+    - record: job:api_success_rate:ratio5m
+      expr: |
+        sum(rate(flask_http_request_total{namespace="demo", status!~"5.."}[5m]))
+        /
+        sum(rate(flask_http_request_total{namespace="demo"}[5m]))
+
+    # Alert: fire khi success rate < 95%
+    - alert: ApiErrorRateHigh
+      expr: job:api_success_rate:ratio5m < 0.95
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "API error rate vượt ngưỡng SLO"
+        description: "Success rate hiện tại: {{ $value | humanizePercentage }}. SLO yêu cầu >= 95%."
+
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+
+metadata:
+  name: api-email-alert
+  namespace: demo
+  labels:
+    alertmanagerConfig: demo
+
+spec:
+  route:
+    receiver: email
+    matchers:
+    - name: alertname
+      value: ApiErrorRateHigh
+
+  receivers:
+  - name: email
+    emailConfigs:
+    - to: your-email@gmail.com        # ← đổi thành email của bạn
+      from: alertmanager@gmail.com    # ← đổi thành email gửi
+      smarthost: smtp.gmail.com:587
+      authUsername: alertmanager@gmail.com   # ← email gửi
+      authPassword:
+        secret:
+          name: smtp-secret
+          key: password
+      requireTLS: true
