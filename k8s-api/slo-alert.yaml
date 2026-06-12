@@ -51,8 +51,8 @@ spec:
   receivers:
   - name: email
     emailConfigs:
-    - to: your-email@gmail.com        # ← đổi thành email của bạn
-      from: alertmanager@gmail.com    # ← đổi thành email gửi
+    - to: vovantuananh040103@gmail.com        # ← đổi thành email của bạn
+      from: vovantuananh040103@gmail.com   # ← đổi thành email gửi
       smarthost: smtp.gmail.com:587
       authUsername: alertmanager@gmail.com   # ← email gửi
       authPassword:
